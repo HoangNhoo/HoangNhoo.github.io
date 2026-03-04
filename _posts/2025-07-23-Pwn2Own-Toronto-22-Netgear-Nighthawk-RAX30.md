@@ -155,7 +155,7 @@ Stack canaries are set at the beginning of functions that have the potential for
 
 
 <div style="text-align:center">
-    <img src="https://claroty.com/img/asset/YXNzZXRzL2ltYWdlLnBuZw/image.png?fm=webp&fit=crop&s=7b6accc211a2aab403a201a2e572f546" />
+    <img src="/assets/img/Netgear-Nighthawk-RAX30/canary.png" />
 </div>
 
 Since most of the SOAP commands require authentication, we focused on trying to bypass the authentication flow.
