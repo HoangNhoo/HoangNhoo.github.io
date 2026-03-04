@@ -67,7 +67,7 @@ I will go through this fast, without notice about the vulnerabilities.
 
 ![image](https://hackmd.io/_uploads/BklTNBmLee.png)
 
-The process begins when the daemon reads the first line of an incoming HTTP request into a memory buffer named req_buffer. This operation correctly handles both standard HTTP and encrypted HTTPS connections, depending on the port the request was received on ([SSL or not](#4.1.1.-SSL-or-not?)).
+The process begins when the daemon reads the first line of an incoming HTTP request into a memory buffer named req_buffer. This operation correctly handles both standard HTTP and encrypted HTTPS connections, depending on the port the request was received on ([SSL or not](#ssl-or-not)).
 
 ![image](https://hackmd.io/_uploads/HyVXTpjHxe.png)
 
