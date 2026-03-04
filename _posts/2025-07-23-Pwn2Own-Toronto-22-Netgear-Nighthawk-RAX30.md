@@ -48,7 +48,7 @@ In summary, the full-chain RCE of NETGEAR RAX30 router uses exactly 5 vulnerabil
 
 ### 4.1. So, what does `soap_serverd` do?
 
-#### 4.1.1. SSL or not?
+#### 4.1.1. SSL or not? {#ssl-or-not}
 Let's break down the program and go through each part to have an observe about how the `soap_serverd` works.
 
 ![image](https://hackmd.io/_uploads/rJHJYairxx.png)
@@ -155,7 +155,7 @@ Stack canaries are set at the beginning of functions that have the potential for
 
 
 <div style="text-align:center">
-    <img src="/assets/img/Netgear-Nighthawk-RAX30/canary.png" />
+   <img src="/assets/img/Netgear-Nighthawk-RAX30/canary.png" alt="checksec stack canary output" /> /canary.png        [1/1]
 </div>
 
 Since most of the SOAP commands require authentication, we focused on trying to bypass the authentication flow.
