@@ -93,7 +93,7 @@ One of the few commands that does not require authentication is `GetInfo`. In th
 
 The following Python script demonstrates how to send a crafted SOAP request to trigger the `GetInfo` action and leak the information.
 
-```python=
+```python
 import argparse
 from pwn import *
 
@@ -651,7 +651,7 @@ I can do something like `ping a; /bin/sh` to get the shell.
 
 ## 5. Chaining 5 vulnerabilities - Goal to PreAuth RCE
 
-![image](https://claroty.com/img/asset/YXNzZXRzL2ltYWdlLSgxKS0xNjgzODEzNzU5LnBuZw/image-%281%29-1683813759.png?fm=webp&fit=crop&s=7a027364e1102ee688fcb1cd315a197f)
+![image](/assets/img/Netgear-Nighthawk-RAX30/chain.png)
 
 The following script is my combine of all exploitations for all issue, allow getting the shell with just router's IP address.
 
