@@ -1,7 +1,7 @@
 ---
 title: PoC Of Pwn2Own Toronto 22 Exploit Netgear Nighthawk RAX30 Routers
 date: 2025-07-23 10:30 +0700
-categories: [CVE_Analysis, IOT]
+categories: [Security_Research, CVE_Analysis, IOT]
 tags: [iot, CVE, pwnable, binary, reversing]
 author: HoangNhoo
 math: true
