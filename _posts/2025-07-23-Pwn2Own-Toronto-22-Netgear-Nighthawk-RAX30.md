@@ -51,11 +51,11 @@ In summary, the full-chain RCE of NETGEAR RAX30 router uses exactly 5 vulnerabil
 #### 4.1.1. SSL or not? {#ssl-or-not}
 Let's break down the program and go through each part to have an observe about how the `soap_serverd` works.
 
-![image](https://hackmd.io/_uploads/rJHJYairxx.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/soap-serverd-main.png)
 
 You can see that the `-n` parameters does not declare in the usage. This parameters will be the value of `modeFlag` variable.
 
-![image](https://hackmd.io/_uploads/HJXPc6oHel.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/modeflag.png)
 
 The `modeFlag` variable is used by `initFlag()` function. This function decides the server to serve with SSL or not. I will not go deeper into this function.
 
@@ -65,29 +65,29 @@ In `soap_server_main_handler()`, the server will listening, the main logic of th
 
 I will go through this fast, without notice about the vulnerabilities.
 
-![image](https://hackmd.io/_uploads/BklTNBmLee.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/read-line-request.png)
 
-The process begins when the daemon reads the first line of an incoming HTTP request into a memory buffer named req_buffer. This operation correctly handles both standard HTTP and encrypted HTTPS connections, depending on the port the request was received on ([SSL or not](#ssl-or-not)).
+The process begins when the daemon reads the first line of an incoming HTTP request into a memory buffer named `req_buffer`. This operation correctly handles both standard HTTP and encrypted HTTPS connections, depending on the port the request was received on ([SSL or not](#ssl-or-not)).
 
-![image](https://hackmd.io/_uploads/HyVXTpjHxe.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/sscanf.png)
 
 The content of `req_buffer` (the HTTP request line) is then parsed to separate it into three components: `method`, `path`, and `protocol`. The code immediately validates that the `method` is POST, as SOAP actions are exclusively handled via POST requests.
 
-![image](https://hackmd.io/_uploads/SJxDBB7Ule.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/parser.png)
 
 Next, the daemon iterates through the HTTP headers to extract crucial information. While it parses headers like `Content-Length` and `Cookie`, the most significant for routing logic is the `SOAPAction` header.
 
-![image](https://hackmd.io/_uploads/rkeyeAiHgl.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/soapaction-switch.png)
 
 The value of the `SOAPAction` is determining which internal function to execute. The daemon expects this header to contain a URN (Uniform Resource Name) followed by a hash symbol `'#'` and an `action_name`.
 
-![image](https://hackmd.io/_uploads/rJkakCjSgl.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/service-value.png)
 
 As shown in the disassembly, the code specifically searches for the `'#'` character. The substring that follows this delimiter is extracted as the action_name. This name is then used to look up the corresponding function from a predefined table of API handlers, effectively dispatching the request to the correct internal code path.
 
 ### 4.2. Issue No. 1: [CVE-2023-27357](https://claroty.com/team82/disclosure-dashboard/cve-2023-27357) NETGEAR RAX30 GetInfo Missing Authentication Information Disclosure Vulnerability
 
-![image](https://hackmd.io/_uploads/r1YdhrmIll.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/handle-device-info.png)
 
 One of the few commands that does not require authentication is `GetInfo`. In the `Get` response, we can find details about the device such as the model, serial number, and more.
 
@@ -120,7 +120,7 @@ p.close()
 
 This serial number is not merely descriptive data; it is used internally by the router as a form of "secret" or nonce to authorize subsequent, more sensitive administrative actions. Therefore, obtaining it is the key to bypassing other security checks.
 
-![image](https://hackmd.io/_uploads/B1sPZI78le.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/device-config.png)
 
 ### 4.3. Issue No. 2: [CVE-2023-27368](https://claroty.com/team82/disclosure-dashboard/cve-2023-27368): NETGEAR RAX30 `soap_serverd` Stack-based Buffer Overflow Authentication Bypass Vulnerability
 
@@ -141,7 +141,7 @@ The `soap_serverd` binary listens for incoming messages on two ports:
 
 Different `socket read` and `socket write` functions are called depending on the port that the SOAP message was sent to.
 
-![image](https://hackmd.io/_uploads/Byl4qU78xl.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/buffer-overflow-primitive.png)
 
 In the SSL flow, when reading the SOAP message headers, the server reads data from the socket one byte at a time. We can easily see that it is read until the char is `\n`, which could lead to a buffer overflow.
 
@@ -155,30 +155,30 @@ Stack canaries are set at the beginning of functions that have the potential for
 
 
 <div style="text-align:center">
-   <img src="/assets/img/Netgear-Nighthawk-RAX30/canary.png" alt="checksec stack canary output" /> /canary.png        [1/1]
+   <img src="/assets/img/Netgear-Nighthawk-RAX30/canary.png" alt="checksec stack canary output" />
 </div>
 
 Since most of the SOAP commands require authentication, we focused on trying to bypass the authentication flow.
 
-![image](https://hackmd.io/_uploads/B1-LCLmUeg.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/authenticate-flow.png)
 
 The first thing the server checks when authenticating users is whether the request came from `127.0.0.1` (`localhost`). Requests coming from localhost do not require authentication. Luckily, the socket source IP is stored on the stack in an offset we can overwrite with our stack overflow.
 
-![image](https://hackmd.io/_uploads/HJPruYmUex.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/auth-check.png)
 
 #### Calculating Offset
 
 In the below explanation, note that the address of `.text` is dynamic, this is just for calculate offset between `current_client_ip_str` and `req_buffer`. Debug images below giving us a better insight.
 
-![image](https://hackmd.io/_uploads/H1RwkcQLgg.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/current-ip-addr.png)
 
 We begin by setting a breakpoint at the read_line_request function. According to the ARM calling convention, the first argument to a function is passed in the `R0` register. In this debugging session, `R0` contains the address `0xbecc89a4`, which is the starting location of our input buffer, `req_buffer`.
 
-![image](https://hackmd.io/_uploads/B1dblqQLll.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/auth-check-addr.png)
 
 Next, we inspect the checkAuthenticated function. The disassembly shows a comparison that validates the string at a specific memory location against `"127.0.0.1"`. By examining the registers at this point, we find that the `current_client_ip_str` is stored at address `0xbeccbb30`.
 
-![image](https://hackmd.io/_uploads/B1OQlc7Lxe.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/current-ip-offset.png)
 
 With both addresses identified, we can calculate the distance between them: `current_client_ip_str` is `0x318c` after `req_buffer`.
 
@@ -211,21 +211,21 @@ p.interactive()
 
 The response contains `<NewConfigFile>` tag, it stores all of information that we need to perform the 4th issue, reset password. 
 
-![image](https://hackmd.io/_uploads/HkfRI578gl.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/config-file-enc.png)
 
 #### Config File is compressed
 
 But there is a problem, this config file is compressed, encoded with strange LZW algorithm and after all encoded with base64.
 
-![image](https://hackmd.io/_uploads/Sk4WNs7Lee.png)
-
+![image](/assets/img/Netgear-Nighthawk-RAX30/compressed-file-code.png)
 
 I will not go deep into `data_GenerateConfig`. The lzw algorithm is open-source and we can find it on github. 
+
 [lzw_encode.c](https://github.com/Netgear/RAXE500/blob/d67c600a6139270907b6993ec9303108b14041e4/userspace/public/libs/cms_util/lzw_encode.c)
 
 In summary, this is how `data_GenerateConfig` works and how the data in `<NewConfigFile>` distributed.
 
-![image](https://hackmd.io/_uploads/B1j58s7Ule.png)
+![image](/assets/img/Netgear-Nighthawk-RAX30/compress-method.png)
 
 #### Decoding Config File
 
